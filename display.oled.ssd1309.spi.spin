@@ -9,11 +9,10 @@
     See end of file for terms of use.
     --------------------------------------------
 }
+#define SSD130X
 #include "lib.gfx.bitmap.spin"
 
 CON
-
-    MAX_COLOR       = 1
 
 OBJ
 
@@ -21,7 +20,6 @@ OBJ
     time    : "time"
     io      : "io"
     spi     : "com.spi.4w"
-    font    : "font.5x8.spin"
 
 VAR
 

@@ -9,11 +9,10 @@
     See end of file for terms of use.
     --------------------------------------------
 }
-#include "lib.gfx.bitmap.spin"
+#define SSD130X
+#include "lib.gfx.bitmap.spin2"
 
 CON
-
-    MAX_COLOR       = 1
 
 OBJ
 
@@ -101,7 +100,7 @@ PUB Defaults
             PageRange (0, 3)
     DisplayOn
 
-PUB Address(addr)
+PUB Address(addr=-2)
 ' Set framebuffer address
     case addr
         $0004..$7FFF-_buff_sz:
