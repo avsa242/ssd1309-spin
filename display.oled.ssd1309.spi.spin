@@ -39,8 +39,6 @@ PUB Start(width, height, CS_PIN, SCK_PIN, SDA_PIN, DC_PIN, RES_PIN, dispbuffer_a
 '       height: 32, 64
 '       CS_PIN, SCK_PIN, SDA_PIN, DC_PIN, RES_PIN: 0..31
     if lookdown(CS_PIN: 0..31) and lookdown(SCK_PIN: 0..31) and lookdown(SDA_PIN: 0..31) and lookdown(DC_PIN: 0..31)
-'        if okay := spi.Start(SDA_PIN, SCK_PIN, spi#MSBPRE, spi#MSBFIRST, core#SCK_DELAY, core#SCK_CPOL)
-'        if okay := spi.Start(core#SCK_DELAY, core#SCK_CPOL)
         if okay := spi.Start(CS_PIN, SCK_PIN, SDA_PIN, SDA_PIN+1)
             _CS := CS_PIN
             _SCK := SCK_PIN
@@ -49,10 +47,8 @@ PUB Start(width, height, CS_PIN, SCK_PIN, SDA_PIN, DC_PIN, RES_PIN, dispbuffer_a
             _RES := RES_PIN
 
             io.Low (_DC)
-'            io.High (_CS)
             io.High (_RES)
             io.Output (_DC)
-'            io.Output (_CS)
             io.Output (_RES)
 
             Reset
@@ -338,24 +334,16 @@ PUB Update | tmp
     ColumnStartEnd (0, _disp_width-1)
     PageRange (0, 7)
 
-'    io.Low(_CS)
     io.High(_DC)
-'    repeat tmp from 0 to _buff_sz-1
-'        spi.ShiftOut(_MOSI, _SCK, core#MOSI_BITORDER, 8, byte[_ptr_drawbuffer][tmp])
-        spi.Write(TRUE, _ptr_drawbuffer, _buff_sz, TRUE)
-'    io.High(_CS)
+    spi.Write(TRUE, _ptr_drawbuffer, _buff_sz, TRUE)
 
 PUB WriteBuffer(buff_addr, buff_sz) | tmp
 ' Write buff_sz bytes of buff_addr to display
     ColumnStartEnd (0, _disp_width-1)
     PageRange (0, 7)
 
-'    io.Low(_CS)
     io.High(_DC)
-'    repeat tmp from 0 to buff_sz-1
-'        spi.ShiftOut(_MOSI, _SCK, core#MOSI_BITORDER, 8, byte[buff_addr][tmp])
     spi.Write(TRUE, buff_addr, buff_sz, TRUE)
-'    io.High(_CS)
 
 PRI writeReg(reg, nr_bytes, val) | cmd_packet[2], tmp, ackbit
 ' Write nr_bytes to register 'reg' stored in val
@@ -379,11 +367,7 @@ PRI writeReg(reg, nr_bytes, val) | cmd_packet[2], tmp, ackbit
         OTHER:
             return $DEADC0DE
 
-'    io.Low(_CS)
     io.Low(_DC)
-'    repeat tmp from 0 to nr_bytes-1
-'        spi.ShiftOut(_MOSI, _SCK, core#MOSI_BITORDER, 8, cmd_packet.byte[tmp])
-'    io.High(_CS)
     spi.Write(TRUE, @cmd_packet, nr_bytes, TRUE)
 DAT
 {
