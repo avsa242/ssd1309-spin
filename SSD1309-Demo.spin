@@ -5,7 +5,7 @@
     Author: Jesse Burt
     Copyright (c) 2020
     Created: Apr 26, 2018
-    Updated: May 5, 2020
+    Updated: May 6, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -334,7 +334,7 @@ PUB Demo_SeqText(testtime) | iteration, col, row, maxcol, maxrow, ch, st
     oled.BGColor(0)
     maxcol := (WIDTH/oled.FontWidth)-1
     maxrow := (HEIGHT/oled.FontHeight)-1
-    ch := $00
+    ch := $20
 
     ser.str(string("Demo_SeqText - "))
     _timer_set := testtime
@@ -345,7 +345,7 @@ PUB Demo_SeqText(testtime) | iteration, col, row, maxcol, maxrow, ch, st
             repeat col from 0 to maxcol
                 ch++
                 if ch > $7F
-                    ch := $00
+                    ch := $20
                 oled.Position (col, row)
                 oled.Char (ch)
         oled.Update
@@ -354,13 +354,12 @@ PUB Demo_SeqText(testtime) | iteration, col, row, maxcol, maxrow, ch, st
     Report(testtime, iteration)
     return iteration
 
-PUB Demo_RndText(testtime) | iteration, col, row, maxcol, maxrow, ch, st
+PUB Demo_RndText(testtime) | iteration, col, row, maxcol, maxrow, st
 
     oled.FGColor(1)
     oled.BGColor(0)
     maxcol := (WIDTH/oled.FontWidth)-1
     maxrow := (HEIGHT/oled.FontHeight)-1
-    ch := $00
 
     ser.str(string("Demo_RndText - "))
     _timer_set := testtime
@@ -369,11 +368,8 @@ PUB Demo_RndText(testtime) | iteration, col, row, maxcol, maxrow, ch, st
     repeat while _timer_set
         repeat row from 0 to maxrow
             repeat col from 0 to maxcol
-                ch++
-                if ch > $7F
-                    ch := $00
                 oled.Position (col, row)
-                oled.Char (rnd(127))
+                oled.Char (32 #> rnd(127))
         oled.Update
         iteration++
 
@@ -459,7 +455,7 @@ PUB RND(maxval) | i
 
     return i
 
-PRI Report(testtime, iterations) 
+PRI Report(testtime, iterations)
 
     ser.str(string("Total iterations: "))
     ser.dec(iterations)
@@ -505,7 +501,7 @@ PRI cog_Timer | time_left
 PUB Setup
 
     repeat until ser.StartRXTX (SER_RX, SER_TX, %0000, SER_BAUD)
-    time.MSleep(100)
+    time.MSleep(30)
     ser.Clear
     ser.Str (string("Serial terminal started", ser#CR, ser#LF))
 
@@ -513,7 +509,7 @@ PUB Setup
         ser.Str (string("SSD1309 driver started. Draw buffer @ $"))
         ser.Hex (oled.Address (-2), 8)
         oled.Defaults
-        oled.OscFreq (540)
+        oled.ClockFreq (540)
         oled.FontSize (6, 8)
         oled.FontAddress (fnt5x8.BaseAddr)
     else
@@ -525,7 +521,7 @@ PUB Setup
 
 PUB Stop
 
-'    oled.Powered(FALSE)
+    oled.Powered(FALSE)
     oled.Stop
     cogstop(_timer_cog)
     ser.Stop

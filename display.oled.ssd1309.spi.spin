@@ -14,6 +14,11 @@
 
 CON
 
+' Display visibility modes
+    NORMAL          = 0
+    ALL_ON          = 1
+    INVERTED        = 2
+
 OBJ
 
     core    : "core.con.ssd1309"
@@ -63,13 +68,13 @@ PUB Start(width, height, CS_PIN, SCK_PIN, SDA_PIN, DC_PIN, RES_PIN, dispbuffer_a
 
 PUB Stop
 
-    DisplayOff
+    Powered(FALSE)
 
 PUB Defaults
 
-    DisplayOff
-    OSCFreq (444)
-    MuxRatio(_disp_height-1)
+    Powered(FALSE)
+    ClockFreq (444)
+    DisplayLines(_disp_height-1)
     DisplayOffset(0)
     DisplayStartLine(0)
     ChargePumpReg(TRUE)
@@ -85,18 +90,10 @@ PUB Defaults
             COMPinCfg(0, 0)
     Contrast(127)
     PrechargePeriod (1, 15)
-    VCOMHDeselectLevel ($40)
-    EntireDisplayOn(FALSE)
-    InvertDisplay(FALSE)
-    ColumnStartEnd (0, _disp_width-1)
-    case _disp_height
-        32:
-            PageRange (0, 3)
-        64:
-            PageRange (0, 7)
-        OTHER:
-            PageRange (0, 3)
-    DisplayOn
+    COMLogicHighLevel (0_77)
+    DisplayVisibility(NORMAL)
+    DisplayBounds(0, 0, _disp_xmax, _disp_ymax)
+    Powered(TRUE)
 
 PUB Address(addr)
 ' Set framebuffer address
