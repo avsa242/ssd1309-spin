@@ -1,11 +1,11 @@
 {
     --------------------------------------------
-    Filename: display.oled.ssd1306.i2c.spin2
-    Description: Driver for Solomon Systech SSD1306, SSD1309 SPI OLED display drivers (P2 version)
+    Filename: display.oled.ssd1306.i2c.spin
+    Description: Driver for Solomon Systech SSD1309 SPI OLED display drivers (P2 version)
     Author: Jesse Burt
-    Copyright (c) 2018
-    Created: Apr 26, 2018
-    Updated: Dec 27, 2019
+    Copyright (c) 2020
+    Created: Dec 27, 2019
+    Updated: May 6, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -20,7 +20,6 @@ OBJ
     time    : "time"
     io      : "io"
     spi     : "com.spi.bitbang-2"
-'    spi     : "com.spi.4w"
 
 VAR
 
@@ -122,10 +121,6 @@ PUB AddrMode(mode)
 
     writeReg(core#CMD_MEM_ADDRMODE, 1, mode)
 
-PUB BufferSize
-' Get size of buffer
-    return _buff_sz
-
 PUB ChargePumpReg(enabled)
 ' Enable Charge Pump Regulator when display power enabled
     case ||enabled
@@ -138,19 +133,34 @@ PUB ChargePumpReg(enabled)
 PUB ClearAccel
 ' Dummy method
 
-PUB ColumnStartEnd(column_start, column_end)
-' Set display start and end columns
-    case column_start
-        0..127:
+PUB ClockFreq(kHz)
+' Set Oscillator frequency, in kHz
+'   Valid values: 360, 372, 384, 396, 408, 420, 432, 444, 456, 468, 480, 492, 504, 516, 528, 540
+'   Any other value is ignored
+'   NOTE: Range is interpolated, based solely on the range specified in the datasheet, divided into 16 steps
+    case kHz
+        core#FOSC_MIN..core#FOSC_MAX:
+            kHz := lookdownz(kHz: 360, 372, 384, 396, 408, 420, 432, 444, 456, 468, 480, 492, 504, 516, 528, 540) << core#FLD_OSCFREQ
         OTHER:
-            column_start := 0
+            return
 
-    case column_end
-        0..127:
+    writeReg(core#CMD_SETOSCFREQ, 1, kHz)
+
+PUB COMLogicHighLevel(level)
+' Set Vcomh deselect level 0.65, 0.77, 0.83 * Vcc
+'   Valid values: 0.65, 0.77, 0.83
+'   Any other value sets the POR value, 0.77
+    case level
+        0.67:
+            level := %000 << 4
+        0.77:
+            level := %010 << 4
+        0.83:
+            level := %011 << 4
         OTHER:
-            column_end := 127
+            level := %010 << 4
 
-    writeReg(core#CMD_SET_COLADDR, 2, (column_end << 8) | column_start)
+    writeReg(core#CMD_SETVCOMDESEL, 1, level)
 
 PUB COMPinCfg(pin_config, remap) | config
 ' Set COM Pins Hardware Configuration and Left/Right Remap
@@ -179,13 +189,38 @@ PUB Contrast(level)
 
     writeReg(core#CMD_CONTRAST, 1, level)
 
-PUB DisplayOn
-' Power on display
-    writeReg(core#CMD_DISP_ON, 0, 0)
+PUB DisplayBounds(sx, sy, ex, ey)
+' Set displayable area
+    ifnot lookup(sx: 0..127) or lookup(sy: 0..63) or lookup(ex: 0..127) or lookup(ey: 0..63)
+        return
 
-PUB DisplayOff
-' Power off display
-    writeReg(core#CMD_DISP_OFF, 0, 0)
+    sy >>= 3
+    ey >>= 3
+    writeReg(core#CMD_SET_COLADDR, 2, (ex << 8) | sx)
+    writeReg(core#CMD_SET_PAGEADDR, 2, (ey << 8) | sy)
+
+PUB DisplayInverted(enabled) | tmp
+' Invert display colors
+    case ||enabled
+        0:
+            DisplayVisibility(NORMAL)
+        1:
+            DisplayVisibility(INVERTED)
+        OTHER:
+            return FALSE
+
+PUB DisplayLines(lines)
+' Set total number of display lines
+'   Valid values: 16..64
+'   Typical values: 32, 64
+'   Any other value is ignored
+    case lines
+        16..64:
+            lines -= 1
+        OTHER:
+            return
+
+    writeReg(core#CMD_SETMUXRATIO, 1, lines)
 
 PUB DisplayOffset(offset)
 ' Set Display Offset/vertical shift from 0..63
@@ -206,30 +241,18 @@ PUB DisplayStartLine(start_line)
 
     writeReg($40, 0, start_line)
 
-PUB DrawBitmap(addr_bitmap)
-' Blits bitmap to display buffer
-    bytemove(_ptr_drawbuffer, addr_bitmap, _buff_sz)
-
-PUB EntireDisplayOn(enabled)
-' TRUE    - Turns on all pixels (doesn't affect GDDRAM contents)
-' FALSE   - Displays GDDRAM contents
-    case ||enabled
-        0, 1:
-            enabled := ||enabled
+PUB DisplayVisibility(mode) | tmp
+' Set display visibility
+    case mode
+        NORMAL:
+            writeReg (core#CMD_RAMDISP_ON, 0, 0)
+            writeReg (core#CMD_DISP_NORM, 0, 0)
+        ALL_ON:
+            writeReg (core#CMD_RAMDISP_ON, 0, 1)
+        INVERTED:
+            writeReg (core#CMD_DISP_NORM, 0, 1)
         OTHER:
-            return
-
-    writeReg(core#CMD_RAMDISP_ON, 0, enabled)
-
-PUB InvertDisplay(enabled)
-' Invert display
-    case ||enabled
-        0, 1:
-            enabled := ||enabled
-        OTHER:
-            return
-
-    writeReg(core#CMD_DISP_NORM, 0, enabled)
+            return FALSE
 
 PUB MirrorH(enabled)
 ' Mirror display, horizontally
@@ -253,41 +276,14 @@ PUB MirrorV(enabled)
 
     writeReg(core#CMD_COMDIR_NORM, 0, enabled)
 
-PUB MuxRatio(mux_ratio)
-' Valid values: 16..64
-    case mux_ratio
-        16..64:
+PUB Powered(enabled) | tmp
+' Enable display power
+    case ||enabled
+        0, 1:
+            enabled := ||enabled + core#CMD_DISP_OFF
         OTHER:
             return
-
-    writeReg(core#CMD_SETMUXRATIO, 1, mux_ratio-1)
-
-PUB OSCFreq(kHz)
-' Set Oscillator frequency, in kHz
-'   Valid values: 360, 372, 384, 396, 408, 420, 432, 444, 456, 468, 480, 492, 504, 516, 528, 540
-'   Any other value is ignored
-'   NOTE: Range is interpolated, based solely on the range specified in the datasheet, divided into 16 steps
-    case kHz
-        core#FOSC_MIN..core#FOSC_MAX:
-            kHz := lookdownz(kHz: 360, 372, 384, 396, 408, 420, 432, 444, 456, 468, 480, 492, 504, 516, 528, 540) << core#FLD_OSCFREQ
-        OTHER:
-            return
-
-    writeReg(core#CMD_SETOSCFREQ, 1, kHz)
-
-PUB PageRange(pgstart, pgend)
-
-    case pgstart
-        0..7:
-        OTHER:
-            pgstart := 0
-
-    case pgend
-        0..7:
-        OTHER:
-            pgend := 7
-
-    writeReg(core#CMD_SET_PAGEADDR, 2, (pgend << 8) | pgstart)
+    writeReg(enabled, 0, 0)
 
 PUB PrechargePeriod(phs1_clks, phs2_clks)
 ' Set Pre-charge period: 1..15 DCLK
@@ -313,34 +309,16 @@ PUB Reset
         time.USleep(3)
         io.High(_RES)
 
-PUB VCOMHDeselectLevel(level)
-' Set Vcomh deselect level 0.65, 0.77, 0.83 * Vcc
-'   Valid values: 0.65, 0.77, 0.83
-'   Any other value sets the POR value, 0.77
-    case level
-        0.67:
-            level := %000 << 4
-        0.77:
-            level := %010 << 4
-        0.83:
-            level := %011 << 4
-        OTHER:
-            level := %010 << 4
-
-    writeReg(core#CMD_SETVCOMDESEL, 1, level)
-
 PUB Update | tmp
 ' Write display buffer to display
-    ColumnStartEnd (0, _disp_width-1)
-    PageRange (0, 7)
+    DisplayBounds(0, 0, _disp_xmax, _disp_ymax)
 
     io.High(_DC)
     spi.Write(TRUE, _ptr_drawbuffer, _buff_sz, TRUE)
 
 PUB WriteBuffer(buff_addr, buff_sz) | tmp
 ' Write buff_sz bytes of buff_addr to display
-    ColumnStartEnd (0, _disp_width-1)
-    PageRange (0, 7)
+    DisplayBounds(0, 0, _disp_xmax, _disp_ymax)
 
     io.High(_DC)
     spi.Write(TRUE, buff_addr, buff_sz, TRUE)
@@ -365,10 +343,11 @@ PRI writeReg(reg, nr_bytes, val) | cmd_packet[2], tmp, ackbit
             cmd_packet.byte[2] := (val >> 8) & $FF
             nr_bytes := 3
         OTHER:
-            return $DEADC0DE
+            return FALSE
 
     io.Low(_DC)
     spi.Write(TRUE, @cmd_packet, nr_bytes, TRUE)
+
 DAT
 {
     --------------------------------------------------------------------------------------------------------
