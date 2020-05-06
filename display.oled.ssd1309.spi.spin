@@ -24,7 +24,7 @@ OBJ
     core    : "core.con.ssd1309"
     time    : "time"
     io      : "io"
-    spi     : "com.spi.bitbang-2"
+    spi     : "com.spi.bitbang"
 
 VAR
 
