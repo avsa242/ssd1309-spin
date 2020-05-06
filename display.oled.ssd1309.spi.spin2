@@ -24,7 +24,7 @@ OBJ
     core    : "core.con.ssd1309"
     time    : "time"
     io      : "io"
-    spi     : "com.spi.bitbang"
+    spi     : "com.spi"
 
 VAR
 
@@ -43,7 +43,7 @@ PUB Start(width, height, CS_PIN, SCK_PIN, SDA_PIN, DC_PIN, RES_PIN, SCK_FREQ, di
 '       height: 32, 64
 '       CS_PIN, SCK_PIN, SDA_PIN, DC_PIN, RES_PIN: 0..63
     if lookdown(CS_PIN: 0..63) and lookdown(SCK_PIN: 0..63) and lookdown(SDA_PIN: 0..63) and lookdown(DC_PIN: 0..63)
-        if okay := spi.Start(SDA_PIN, -1, SCK_PIN, SCK_FREQ)
+        if okay := spi.Start(SCK_PIN, SDA_PIN, SCK_PIN-1, SCK_FREQ)
             _CS := CS_PIN
             _SCK := SCK_PIN
             _MOSI := SDA_PIN
@@ -315,7 +315,7 @@ PUB Update | tmp
     io.Low(_CS)
     io.High(_DC)
     repeat tmp from 0 to _buff_sz-1
-        spi.Write(_MOSI, _SCK, core#MOSI_BITORDER, 8, byte[_ptr_drawbuffer][tmp])
+        spi.Write(byte[_ptr_drawbuffer][tmp])
     io.High(_CS)
 
 PUB WriteBuffer(buff_addr, buff_sz) | tmp
@@ -325,7 +325,7 @@ PUB WriteBuffer(buff_addr, buff_sz) | tmp
     io.Low(_CS)
     io.High(_DC)
     repeat tmp from 0 to buff_sz-1
-        spi.Write(_MOSI, _SCK, core#MOSI_BITORDER, 8, byte[buff_addr][tmp])
+        spi.Write(byte[buff_addr][tmp])
     io.High(_CS)
 
 PRI writeReg(reg, nr_bytes, val) | cmd_packet[2], tmp, ackbit
@@ -353,7 +353,7 @@ PRI writeReg(reg, nr_bytes, val) | cmd_packet[2], tmp, ackbit
     io.Low(_CS)
     io.Low(_DC)
     repeat tmp from 0 to nr_bytes-1
-        spi.Write(_MOSI, _SCK, core#MOSI_BITORDER, 8, cmd_packet.byte[tmp])
+        spi.Write(cmd_packet.byte[tmp])
     io.High(_CS)
 
 DAT
