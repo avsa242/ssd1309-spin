@@ -5,7 +5,7 @@
     Author: Jesse Burt
     Copyright (c) 2020
     Created: Apr 26, 2018
-    Updated: May 6, 2020
+    Updated: May 10, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -32,11 +32,11 @@ CON
     WIDTH       = 128
     HEIGHT      = 64
 
-    CS_PIN      = 12
+    CS_PIN      = 11
     SCK_PIN     = 8
     SDA_PIN     = 9
-    DC_PIN      = 11
-    RES_PIN     = 10
+    DC_PIN      = 10
+    RES_PIN     = 14
     SCK_FREQ    = 10_000_000
 
     SER_RX      = cfg#SER_RX
@@ -200,24 +200,10 @@ PUB Demo_Greet
     oled.FGColor(1)
     oled.BGColor(0)
     oled.Position (0, 0)
-    oled.Str (string("SSD1309 on the"))
-
-    oled.Position (0, 1)
-    oled.Str (string("Parallax"))
-
-    oled.Position (0, 2)
-    oled.Str (string("P8X32A @ "))
-    oled.Str (int.Dec(clkfreq/1_000_000))
-    oled.Str (string("MHz"))
-
-    oled.Position (0, 3)
-    oled.Str (int.DecPadded (WIDTH, 3))
-
-    oled.Position (3, 3)
-    oled.Str (string("x"))
-
-    oled.Position (4, 3)
-    oled.Str (int.DecPadded (HEIGHT, 2))
+    oled.printf("SSD1309 on the\n")
+    oled.printf("Parallax P2X8C4M64P @\n")
+    oled.printf("%dMHz\n", clkfreq/1_000_000)
+    oled.printf("%dx%d", WIDTH, HEIGHT)
     oled.Update
 
 PUB Demo_Line (testtime) | iteration
@@ -337,48 +323,38 @@ PUB Demo_Sinewave(testtime) | iteration, x, y, modifier, offset, div
     Report(testtime, iteration)
     return iteration
 
-PUB Demo_SeqText(testtime) | iteration, col, row, maxcol, maxrow, ch, st
-' Sequentially draws the whole font table to the screen, then random characters
-    oled.FGColor(1)
-    oled.BGColor(0)
-    maxcol := (WIDTH/oled.FontWidth)-1
-    maxrow := (HEIGHT/oled.FontHeight)-1
-    ch := $20
+PUB Demo_SeqText(testtime) | iteration, ch, chars
+' Sequentially draws the whole font table to the screen
+    chars := oled.TextCols * oled.TextRows
+    ch := 32
 
     ser.str(string("Demo_SeqText - "))
     _timer_set := testtime
     iteration := 0
 
+    oled.Position(0, 0)
     repeat while _timer_set
-        repeat row from 0 to maxrow
-            repeat col from 0 to maxcol
-                ch++
-                if ch > $7F
-                    ch := $20
-                oled.Position (col, row)
-                oled.Char (ch)
+        repeat chars
+            oled.Char (ch++)
+            if ch > 127
+                ch := 32
+
         oled.Update
         iteration++
 
     Report(testtime, iteration)
     return iteration
 
-PUB Demo_RndText(testtime) | iteration, col, row, maxcol, maxrow, st
-
-    oled.FGColor(1)
-    oled.BGColor(0)
-    maxcol := (WIDTH/oled.FontWidth)-1
-    maxrow := (HEIGHT/oled.FontHeight)-1
-
+PUB Demo_RndText(testtime) | iteration, chars
+' Draw random text characters
+    chars := oled.TextCols * oled.TextRows
     ser.str(string("Demo_RndText - "))
     _timer_set := testtime
     iteration := 0
 
     repeat while _timer_set
-        repeat row from 0 to maxrow
-            repeat col from 0 to maxcol
-                oled.Position (col, row)
-                oled.Char (32 #> rnd(127))
+        repeat chars
+            oled.Char (32 #> rnd(127))
         oled.Update
         iteration++
 
