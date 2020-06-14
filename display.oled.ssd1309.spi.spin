@@ -14,6 +14,8 @@
 
 CON
 
+    BYTESPERPX      = 1
+
 ' Display visibility modes
     NORMAL          = 0
     ALL_ON          = 1
@@ -30,6 +32,7 @@ VAR
 
     long _ptr_drawbuffer
     word _buff_sz
+    word BYTESPERLN
     byte _disp_width, _disp_height, _disp_xmax, _disp_ymax
     byte _CS, _SCK, _MOSI, _DC, _RES
 
@@ -61,6 +64,7 @@ PUB Start(width, height, CS_PIN, SCK_PIN, SDA_PIN, DC_PIN, RES_PIN, dispbuffer_a
             _disp_height := height
             _disp_xmax := _disp_width-1
             _disp_ymax := _disp_height-1
+            BYTESPERLN := _disp_width * BYTESPERPX
             _buff_sz := (_disp_width * _disp_height) / 8
             Address(dispbuffer_address)
             return
