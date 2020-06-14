@@ -3,9 +3,9 @@
     Filename: core.con.ssd1309.spin
     Author: Jesse Burt
     Description: SSD1309 OLED/PLED Display driver registers/command set
-    Copyright (c) 2019
+    Copyright (c) 2020
     Created: Apr 26, 2019
-    Updated: Dec 27, 2019
+    Updated: Jun 14, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -74,7 +74,11 @@ CON
 
     CMD_NOOP        = $E3
 
-PUB null
+#ifdef _P2_
+PUB Null()
+#else
+PUB Null
+#endif
 ''This is not a top-level object
 
 DAT
