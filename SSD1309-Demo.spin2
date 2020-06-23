@@ -5,7 +5,7 @@
     Author: Jesse Burt
     Copyright (c) 2020
     Created: Apr 26, 2018
-    Updated: Jun 14, 2020
+    Updated: Jun 23, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -52,7 +52,6 @@ VAR
 
     long _stack_timer[50]
     long _timer_set
-    long _rndSeed
     byte _framebuff[BUFFSZ]
     byte _timer_cog, _ser_cog
 
@@ -123,7 +122,7 @@ PUB Demo_BouncingBall(testtime, radius) | iteration, bx, by, dx, dy
     dx := rnd(4) // 2 * 2 - 1                               'Pick a random direction to
     dy := rnd(4) // 2 * 2 - 1                               ' start moving
 
-    ser.str(string("Demo_BouncingBall - "))
+    ser.printf("Demo_BouncingBall - ")
     _timer_set := testtime
     iteration := 0
 
@@ -144,7 +143,7 @@ PUB Demo_BouncingBall(testtime, radius) | iteration, bx, by, dx, dy
 
 PUB Demo_Bitmap(testtime, bitmap_addr) | iteration
 ' Continuously redraws bitmap at address bitmap_addr
-    ser.str(string("Demo_Bitmap - "))
+    ser.printf("Demo_Bitmap - ")
     _timer_set := testtime
     iteration := 0
 
@@ -157,7 +156,7 @@ PUB Demo_Bitmap(testtime, bitmap_addr) | iteration
 
 PUB Demo_Circle(testtime) | iteration, x, y, r
 ' Draws circles at random locations
-    ser.str(string("Demo_Circle - "))
+    ser.printf("Demo_Circle - ")
     _timer_set := testtime
     iteration := 0
 
@@ -174,15 +173,15 @@ PUB Demo_Circle(testtime) | iteration, x, y, r
 
 PUB Demo_Contrast(reps, delay_ms) | contrast_level
 ' Fades out and in display contrast
-    ser.str(string("Demo_Contrast - N/A"))
+    ser.printf("Demo_Contrast - N/A")
 
     repeat reps
         repeat contrast_level from 255 to 1
             oled.Contrast (contrast_level)
-            time.MSleep (delay_ms)
+            waitms (delay_ms)
         repeat contrast_level from 0 to 254
             oled.Contrast (contrast_level)
-            time.MSleep (delay_ms)
+            waitms (delay_ms)
 
     ser.newline()
 
@@ -199,7 +198,7 @@ PUB Demo_Greet
 
 PUB Demo_Line (testtime) | iteration
 ' Draws random lines with color -1 (invert)
-    ser.str(string("Demo_Line - "))
+    ser.printf("Demo_Line - ")
     _timer_set := testtime
     iteration := 0
 
@@ -215,7 +214,7 @@ PUB Demo_LineSweepX (testtime) | iteration, x
 '  from the top-down
     x := 0
 
-    ser.str(string("Demo_LineSweepX - "))
+    ser.printf("Demo_LineSweepX - ")
     _timer_set := testtime
     iteration := 0
 
@@ -234,7 +233,7 @@ PUB Demo_LineSweepY (testtime) | iteration, y
 '  from the top-down
     y := 0
 
-    ser.str(string("Demo_LineSweepY - "))
+    ser.printf("Demo_LineSweepY - ")
     _timer_set := testtime
     iteration := 0
 
@@ -252,7 +251,7 @@ PUB Demo_MEMScroller(testtime, start_addr, end_addr) | iteration, pos, st, en
 ' Dumps Propeller Hub RAM (and/or ROM) to the display buffer
     pos := start_addr
 
-    ser.str(string("Demo_MEMScroller - "))
+    ser.printf("Demo_MEMScroller - ")
     _timer_set := testtime
     iteration := 0
 
@@ -268,7 +267,7 @@ PUB Demo_MEMScroller(testtime, start_addr, end_addr) | iteration, pos, st, en
 
 PUB Demo_Plot(testtime) | iteration, x, y
 ' Draws random pixels to the screen, with color -1 (invert)
-    ser.str(string("Demo_Plot - "))
+    ser.printf("Demo_Plot - ")
     _timer_set := testtime
     iteration := 0
 
@@ -281,7 +280,7 @@ PUB Demo_Plot(testtime) | iteration, x, y
 
 PUB Demo_Sinewave(testtime) | iteration, x, y, modifier, offset, div
 ' Draws a sine wave the length of the screen, influenced by the system counter
-    ser.str(string("Demo_Sinewave - "))
+    ser.printf("Demo_Sinewave - ")
 
     case HEIGHT
         32:
@@ -308,38 +307,46 @@ PUB Demo_Sinewave(testtime) | iteration, x, y, modifier, offset, div
 
     Report(testtime, iteration)
 
-PUB Demo_SeqText(testtime) | iteration, ch, chars
+PUB Demo_SeqText(testtime) | iteration, col, row, ch, fg, bg
 ' Sequentially draws the whole font table to the screen
-    chars := oled.TextCols * oled.TextRows
-    ch := 32
-
-    ser.str(string("Demo_SeqText - "))
+    ch := $20
+    ser.printf("Demo_SeqText - ")
     _timer_set := testtime
     iteration := 0
 
-    oled.Position(0, 0)
     repeat while _timer_set
-        repeat chars
-            oled.Char (ch++)
-            if ch > 127
-                ch := 32
-
-        oled.Update()
+        ch++
+        if ch > $7F
+            ch := $20
+        fg++
+        if fg > oled.MAX_COLOR
+            fg := 0
+        bg--
+        if bg < -1
+            bg := oled.MAX_COLOR
+        oled.FGColor(fg)
+        oled.BGColor(bg)
+        oled.Char (ch)
         iteration++
 
     Report(testtime, iteration)
 
-PUB Demo_RndText(testtime) | iteration, chars
-' Draw random text characters
-    chars := oled.TextCols * oled.TextRows
-    ser.str(string("Demo_RndText - "))
+PUB Demo_RndText(testtime) | iteration, col, row, fg, bg
+' Draws random characters to the screen
+    ser.printf("Demo_RndText - ")
     _timer_set := testtime
     iteration := 0
 
     repeat while _timer_set
-        repeat chars
-            oled.Char (32 #> rnd(127))
-        oled.Update()
+        fg++
+        if fg > oled.MAX_COLOR
+            fg := 0
+        bg--
+        if bg < -1
+            bg := oled.MAX_COLOR
+        oled.FGColor(fg)
+        oled.BGColor(bg)
+        oled.Char (32 #> rnd(127))
         iteration++
 
     Report(testtime, iteration)
@@ -349,7 +356,7 @@ PUB Demo_TriWave(testtime) | iteration, x, y, ydir
     ydir := 1
     y := 0
 
-    ser.str(string("Demo_TriWave - "))
+    ser.printf("Demo_TriWave - ")
     _timer_set := testtime
     iteration := 0
 
@@ -369,11 +376,10 @@ PUB Demo_TriWave(testtime) | iteration, x, y, ydir
 
 PUB Demo_Wander(testtime) | iteration, x, y, d
 ' Draws randomly wandering pixels
-    _rndSeed := cnt
     x := XMAX/2
     y := YMAX/2
 
-    ser.str(string("Demo_Wander - "))
+    ser.printf("Demo_Wander - ")
     _timer_set := testtime
     iteration := 0
 
@@ -401,6 +407,10 @@ PUB Demo_Wander(testtime) | iteration, x, y, d
 
     Report(testtime, iteration)
 
+PUB RND(maxval): r
+' Return a random number up to maximum 'maxval'
+    r := getrnd() +// maxval
+
 PUB Sin(angle) | tmp
 ' Return the sine of angle
     asm
@@ -410,28 +420,17 @@ PUB Sin(angle) | tmp
     endasm
     return tmp
 
-PUB RND(maxval) | i
-' Return random number up to maxval
-    asm
-        getrnd i
-        shr i, #16
-        add maxval, #1
-        mul i, maxval
-        shr i, #16
-    endasm
-    return i
-
 PRI Report(testtime, iterations)
 
-    ser.str(string("Total iterations: "))
+    ser.printf("Total iterations: ")
     ser.dec(iterations)
 
-    ser.str(string(", Iterations/sec: "))
+    ser.printf(", Iterations/sec: ")
     ser.dec(iterations / (testtime/1000))
 
-    ser.str(string(", Iterations/ms: "))
-    Decimal( (iterations * 1_000) / testtime, 1_000)
-    ser.newline
+    ser.printf(", ms/Iteration: ")
+    Decimal( (testtime * 1_000) / iterations, 1_000)
+    ser.newline()
 
 PRI Decimal(scaled, divisor) | whole[4], part[4], places, tmp
 ' Display a fixed-point scaled up number in decimal-dot notation - scale it back down by divisor
@@ -460,29 +459,29 @@ PRI cog_Timer() | time_left
 
         repeat
             time_left--
-            time.MSleep(1)
+            waitms(1)
         while time_left > 0
         _timer_set := 0
 
 PUB Setup()
 
     repeat until ser.StartRXTX (SER_RX, SER_TX, %0000, SER_BAUD)
-    time.MSleep(30)
+    waitms(30)
     ser.Clear()
-    ser.Str (string("Serial terminal started", ser.CR, ser.LF))
+    ser.printf("Serial terminal started\n")
     if oled.Start (WIDTH, HEIGHT, CS_PIN, SCK_PIN, SDA_PIN, DC_PIN, RES_PIN, SCK_FREQ, @_framebuff)
-        ser.Str (string("SSD1309 driver started. Draw buffer @ $"))
+        ser.printf("SSD1309 driver started. Draw buffer @ $")
         ser.Hex (oled.Address(), 8)
         oled.Defaults()
         oled.ClockFreq (540)
         oled.FontSize (6, 8)
         oled.FontAddress (fnt5x8.BaseAddr())
     else
-        ser.Str (string("SSD1309 driver failed to start - halting"))
+        ser.printf("SSD1309 driver failed to start - halting")
         Stop()
         FlashLED (LED, 500)
 
-    _timer_cog := cognew(cog_Timer, @_stack_timer)
+    _timer_cog := cogspin(16, cog_Timer, @_stack_timer)
 
 PUB Stop()
 
