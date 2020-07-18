@@ -31,17 +31,16 @@ Presence of lib.gfx.bitmap library
 ## Compiler Compatibility
 
 * P1/SPIN1: OpenSpin (tested with 1.00.81)
-* P2/SPIN2: FastSpin (tested with 4.1.10-beta)
+* P2/SPIN2: FastSpin (tested with 4.2.5-beta)
 * ~~BST~~ (incompatible - no preprocessor)
 * ~~Propeller Tool~~ (incompatible - no preprocessor)
 * ~~PNut~~ (incompatible - no preprocessor)
 
 ## Limitations
 
-* Very early in development - may malfunction or outright fail to build
 * Doesn't support parallel interface-connected displays (currently unplanned)
 * Doesn't support I2C-connected displays (planned)
-* Doesn't support hardware-accelerated scrolling features
+* Doesn't support hardware-accelerated scrolling features (planned)
 
 ## TODO
 
