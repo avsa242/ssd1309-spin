@@ -74,7 +74,7 @@ CON
 
     CMD_NOOP        = $E3
 
-#ifndef __propeller2
+#ifndef __propeller2__
 PUB Null
 '' This is not a top-level object
 #endif
