@@ -20,21 +20,21 @@ CON
     XMAX        = WIDTH-1
     YMAX        = HEIGHT-1
 
-' User-modifiable constants:
-    WIDTH       = 128
-    HEIGHT      = 64
-
-    CS_PIN      = 12
-    SCK_PIN     = 8
-    SDA_PIN     = 9
-    DC_PIN      = 11
-    RES_PIN     = 10
-
+' -- User-modifiable constants:
     SER_RX      = 31
     SER_TX      = 30
     SER_BAUD    = 115_200
-
     LED         = cfg#LED1
+
+    CS_PIN      = 4
+    SCK_PIN     = 0
+    SDA_PIN     = 1
+    DC_PIN      = 3
+    RES_PIN     = 2
+
+    WIDTH       = 128
+    HEIGHT      = 64
+' --
 
 OBJ
 
@@ -510,6 +510,7 @@ PUB Setup
         ser.Hex (oled.Address (-2), 8)
         oled.Defaults
         oled.ClockFreq (540)
+        oled.fontscale(1)
         oled.FontSize (6, 8)
         oled.FontAddress (fnt5x8.BaseAddr)
     else
