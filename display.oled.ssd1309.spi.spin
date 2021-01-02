@@ -15,6 +15,7 @@
 CON
 
     BYTESPERPX      = 1
+    MAX_COLOR       = 1
 
 ' Display visibility modes
     NORMAL          = 0
