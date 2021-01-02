@@ -30,8 +30,8 @@ Presence of lib.gfx.bitmap library
 
 ## Compiler Compatibility
 
-* P1/SPIN1: OpenSpin (tested with 1.00.81)
-* P2/SPIN2: FastSpin (tested with 4.2.5-beta)
+* P1/SPIN1: OpenSpin (tested with 1.00.81), FlexSpin (tested with 5.0.0)
+* P2/SPIN2: FlexSpin (tested with 5.0.0)
 * ~~BST~~ (incompatible - no preprocessor)
 * ~~Propeller Tool~~ (incompatible - no preprocessor)
 * ~~PNut~~ (incompatible - no preprocessor)
